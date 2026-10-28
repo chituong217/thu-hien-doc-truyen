@@ -5,7 +5,7 @@
   const read = (name, fallback) => { try { return JSON.parse(localStorage.getItem(key + name)) ?? fallback; } catch { notice(); return fallback; } };
   const write = (name, value) => { try { localStorage.setItem(key + name, JSON.stringify(value)); } catch { notice(); } };
   const allowed = { fontSize: ['18','20','22','24','28','32'], lineHeight: ['1.6','1.85','2.1','2.4'], theme: ['paper','light','dark'] };
-  const defaults = { fontSize: '22', lineHeight: '1.85', theme: 'paper' };
+  const defaults = { fontSize: '22', lineHeight: '1.85', theme: 'light' };
   const stored = read('settings', {});
   const settings = Object.fromEntries(Object.keys(defaults).map(k => [k, allowed[k].includes(stored?.[k]) ? stored[k] : defaults[k]]));
   function apply() { document.documentElement.dataset.theme = settings.theme; document.documentElement.style.setProperty('--font-size', settings.fontSize + 'px'); document.documentElement.style.setProperty('--line-height', settings.lineHeight); }
@@ -26,6 +26,14 @@
   }
   resumeLinks();
   window.addEventListener('pageshow', resumeLinks);
+  const search = document.getElementById('story-search');
+  if (search) search.addEventListener('input', () => {
+    const normalize = s => s.toLocaleLowerCase('vi').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').trim();
+    const query = normalize(search.value);
+    let found = 0;
+    document.querySelectorAll('[data-search-title]').forEach(row => { row.hidden = !normalize(row.dataset.searchTitle).includes(query); if (!row.hidden) found++; });
+    document.getElementById('search-status').hidden = found !== 0;
+  });
   const story = document.body.dataset.story;
   const chapter = Number(document.body.dataset.chapter);
   if (!story || !chapter) return;
